@@ -7,13 +7,21 @@ import { supabase } from '../../utils/supabase';
 export default function CreatePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [title, setTitle] = useState('');
+  const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [startPrice, setStartPrice] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [bidIncrement, setBidIncrement] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [category, setCategory] = useState('');
-  const [categories, setCategories] = useState([]);
+  const [vehicleType, setVehicleType] = useState('');
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [color, setColor] = useState('');
+  const [location, setLocation] = useState('');
+
+
+  const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [makes, setMakes] = useState([]);
+  const [models, setModels] = useState([]);
 
   const checkAuth = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -23,21 +31,51 @@ export default function CreatePage() {
   }, [router]);
 
   useEffect(() => {
-    fetchCategories();
+    fetchMake();
+    fetchModel();
+    fetchVehicleType();
     checkAuth();
   }, [checkAuth]);
 
-  async function fetchCategories() {
+  async function fetchVehicleType() {
     try {
       const { data, error } = await supabase
-        .from('Category')
+        .from('VehicleType')
         .select('*')
         .order('name');
 
       if (error) throw error;
-      setCategories(data || []);
+      setVehicleTypes(data || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('Error fetching vehicle types:', error);
+    }
+  }
+
+  async function fetchMake() {
+    try {
+      const { data, error } = await supabase
+        .from('Make')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setMakes(data || []);
+    } catch (error) {
+      console.error('Error fetching makes:', error);
+    }
+  }
+
+  async function fetchModel() {
+    try {
+      const { data, error } = await supabase
+        .from('Model')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setModels(data || []);
+    } catch (error) {
+      console.error('Error fetching models:', error);
     }
   }
 
@@ -49,15 +87,19 @@ export default function CreatePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('You must be logged in to create an auction');
 
-      const { error } = await supabase.from('Item').insert([
+      const { error } = await supabase.from('Vehicle').insert([
         {
-          title,
+          name,
           description,
-          startPrice: parseFloat(startPrice),
-          imageUrl: imageUrl,
-          endDate: endDate,
+          start_price: parseFloat(startPrice), 
+          bid_increment: parseFloat(bidIncrement),
+          end_date: endDate,
           sellerId: user.id,
-          categoryId: category
+          vehicleTypeId: vehicleType,
+          makeId: make,
+          modelId: model,
+          color,
+          location,
         },
       ]);
 
@@ -72,18 +114,26 @@ export default function CreatePage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'title') {
-      setTitle(value);
+    if (name === 'name') {
+      setName(value);
     } else if (name === 'description') {
       setDescription(value);
     } else if (name === 'startPrice') {
       setStartPrice(value);
-    } else if (name === 'imageUrl') {
-      setImageUrl(value);
+    } else if (name === 'bidIncrement') {
+      setBidIncrement(value);
     } else if (name === 'endDate') {
       setEndDate(value);
-    } else if (name === 'categoryId') {
-      setCategory(value);
+    } else if (name === 'vehicleTypeId') {
+      setVehicleType(value);
+    } else if (name === 'makeId') {
+      setMake(value);
+    } else if (name === 'modelId') {
+      setModel(value);
+    } else if (name === 'color') {
+      setColor(value);
+    } else if (name === 'location') {
+      setLocation(value);
     }
   };
 
@@ -92,12 +142,14 @@ export default function CreatePage() {
       <h1 className="text-3xl font-bold mb-8">Create New Auction</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Title</label>
+          <label className="block text-sm font-medium text-gray-700">
+            Name
+          </label>
           <input
             type="text"
-            name="title"
+            name="name"
             required
-            value={title}
+            value={name}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
@@ -109,32 +161,99 @@ export default function CreatePage() {
           </label>
           <textarea
             name="description"
-            required
             value={description}
             onChange={handleChange}
-            rows={4}
+            rows={3}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Category
+            Vehicle Type
           </label>
           <select
-            name="categoryId"
+            name="vehicleTypeId"
             required
-            value={category}
+            value={vehicleType}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           >
-            <option value="">Select a category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
+            <option value="">Select a vehicle type</option>
+            {vehicleTypes.map((vehicleType) => (
+              <option key={vehicleType.id} value={vehicleType.id}>
+                {vehicleType.name}
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Make
+          </label>
+          <select
+            name="makeId"
+            required
+            value={make}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="">Select a make</option>
+            {makes.map((make) => (
+              <option key={make.id} value={make.id}>
+                {make.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Model
+          </label>
+          <select
+            name="modelId"
+            required
+            value={model}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          >
+            <option value="">Select a model</option>
+            {models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Color
+          </label>
+          <input
+            type="text"
+            name="color"
+            required
+            value={color}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Location
+          </label>
+          <input
+            type="text"
+            name="location"
+            required
+            value={location}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          />
         </div>
 
         <div>
@@ -155,13 +274,15 @@ export default function CreatePage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            End Time
+            Bid Increment ($)
           </label>
           <input
-            type="datetime-local"
-            name="endDate"
+            type="number"
+            name="bidIncrement"
             required
-            value={endDate}
+            min="1"
+            step="0.01"
+            value={bidIncrement}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
@@ -169,12 +290,13 @@ export default function CreatePage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            Image URL
+            End Time
           </label>
           <input
-            type="url"
-            name="imageUrl"
-            value={imageUrl}
+            type="datetime-local"
+            name="endDate"
+            required
+            value={endDate}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
@@ -192,4 +314,4 @@ export default function CreatePage() {
       </form>
     </div>
   );
-} 
+}

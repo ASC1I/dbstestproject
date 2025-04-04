@@ -30,6 +30,7 @@ model Vehicle {
   description   String?
   startPrice    Float
   currentPrice  Float
+  bidIncrement  Float
   startTime     DateTime    @default(now())
   endTime       DateTime
   status        String      @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
