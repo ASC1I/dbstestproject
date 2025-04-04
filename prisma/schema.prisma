@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// npx prisma migrate dev --name init
+// npx prisma db push
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id        String   @id
+  email     String   @unique
+  fname     String?
+  lname     String?
+  items     Item[]   @relation("UserItems")
+  bids      Bid[]
+  createdAt DateTime @default(now())
+}
+
+model Item {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  startPrice    Float
+  currentPrice  Float
+  imageUrl      String?
+  startTime     DateTime
+  endTime       DateTime
+  status        String   @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  seller        Profile  @relation("UserItems", fields: [sellerId], references: [id])
+  sellerId      String
+  category      Category @relation(fields: [categoryId], references: [id])
+  categoryId    String
+  bids          Bid[]
+}
+
+model Bid {
+  id        String   @id @default(cuid())
+  amount    Float
+  createdAt DateTime @default(now())
+  user      Profile  @relation(fields: [userId], references: [id])
+  userId    String
+  item      Item     @relation(fields: [itemId], references: [id])
+  itemId    String
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  items       Item[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
