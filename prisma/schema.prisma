@@ -17,32 +17,59 @@ datasource db {
 }
 
 model Profile {
-  id        String   @id
-  email     String   @unique
-  fname     String?
-  lname     String?
-  items     Item[]   @relation("UserItems")
+  id        String    @id
+  email     String    @unique
+  vehicles  Vehicle[] @relation("UserVehicles")
   bids      Bid[]
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 }
 
-model Item {
-  id            String   @id @default(cuid())
-  title         String
-  description   String
+model Vehicle {
+  id            String      @id @default(cuid())
+  name          String
+  description   String?
   startPrice    Float
   currentPrice  Float
-  imageUrl      String?
-  startTime     DateTime
+  startTime     DateTime    @default(now())
   endTime       DateTime
-  status        String   @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  seller        Profile  @relation("UserItems", fields: [sellerId], references: [id])
+  status        String      @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
+  color         String
+  location      String
+  seller        Profile     @relation("UserVehicles", fields: [sellerId], references: [id])
   sellerId      String
-  category      Category @relation(fields: [categoryId], references: [id])
-  categoryId    String
+  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
+  vehicleTypeId String
+  make          Make        @relation(fields: [makeId], references: [id])
+  makeId        String
+  model         Model       @relation(fields: [modelId], references: [id])
+  modelId       String
   bids          Bid[]
+}
+
+model VehicleType {
+  id      String    @id @default(cuid())
+  name    String    @unique
+  makes   Make[]
+  Vehicle Vehicle[]
+}
+
+model Make {
+  id            String      @id @default(cuid())
+  name          String      @unique
+  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
+  vehicleTypeId String
+  models        Model[]
+  Vehicle       Vehicle[]
+}
+
+model Model {
+  id       String    @id @default(cuid())
+  name     String
+  make     Make      @relation(fields: [makeId], references: [id])
+  makeId   String
+  vehicles Vehicle[]
+
+  @@unique([makeId, name]) // Ensures model names are unique within a make
 }
 
 model Bid {
@@ -51,15 +78,6 @@ model Bid {
   createdAt DateTime @default(now())
   user      Profile  @relation(fields: [userId], references: [id])
   userId    String
-  item      Item     @relation(fields: [itemId], references: [id])
-  itemId    String
-}
-
-model Category {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  items       Item[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId String
 }
