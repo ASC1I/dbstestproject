@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { supabase } from '../utils/supabase';
-import { createUser } from '../actions/actions';
+import { toast } from 'react-hot-toast'
+import { useRouter } from 'next/navigation';
 
 
 export default function Auth() {
@@ -11,6 +12,7 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [isSignUp, setIsSignUp] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,17 +21,35 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
-        const { foundUser } = await supabase.auth.signUp({
+        if (password.length < 6) {
+          toast.error('Password must be at least 6 characters long.');
+          return;
+        }
+
+        const { user, error } = await supabase.auth.signUp({
           email,
           password,
         });
-        if (foundUser) throw error;
+
+        if (error) {
+          toast.error('Error signing up. Please try again.');
+          throw error;
+        } else {
+          toast.success('Check your email for a confirmation link!');
+        }
       } else {
-        const { foundUser } = await supabase.auth.signInWithPassword({
+        const { foundUser, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
-        if (foundUser) throw error;
+        if (signInError) {
+          toast.error('Invalid email or password. Please try again.');
+          throw signInError;
+        } else {
+          toast.success('Logged in successfully!');
+          router.push('/');
+          return;
+        }
       }
     } catch (foundUser) {
       setError(foundUser.message);
