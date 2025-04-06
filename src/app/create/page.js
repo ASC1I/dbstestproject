@@ -50,17 +50,27 @@ export default function CreatePage() {
 
   async function fetchMake(vehicleTypeId) {
     try {
-      const { data, error } = await supabase
-        .from('Make')
-        .select('*, vehicleTypes!inner(id)') // Include the relationship with VehicleType
-        .eq('vehicleTypes.id', vehicleTypeId) // Filter by the selected VehicleType ID
-        .order('name');
+      // First get the A values
+      const { data: vehicleTypeMakes, error: innerError } = await supabase
+      .from('_VehicleTypeMakes')
+      .select('A')
+      .eq('B', vehicleTypeId)
+
+      if (innerError) throw innerError
+
+      // Then get the Makes using those values
+      const makeIds = vehicleTypeMakes.map(item => item.A)
+      const { data: makes, error: outerError } = await supabase
+      .from('Make')
+      .select('id, name')
+      .in('id', makeIds)
+      .order('name')
   
-      if (error) throw error;
-      setMakes(data || []);
+      if (outerError) throw outerError;
+      setMakes(makes || []);
       setModels([]); // Reset models when vehicle type changes
     } catch (error) {
-      console.error('Error fetching Make table:', error);
+      console.error('Error fetching Make table:', error.message || error);
     }
   }
 
@@ -124,7 +134,7 @@ export default function CreatePage() {
       setModelId(''); // Reset model when make changes
       fetchModel(value); // Fetch models for the selected make
     } else if (name === 'modelId') {
-      setModel(value);
+      setModelId(value);
     } else if (name === 'name') {
       setName(value);
     } else if (name === 'description') {
