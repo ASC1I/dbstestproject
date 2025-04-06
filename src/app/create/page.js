@@ -12,6 +12,7 @@ export default function CreatePage() {
   const [description, setDescription] = useState('');
   const [startPrice, setStartPrice] = useState('');
   const [bidIncrement, setBidIncrement] = useState('');
+  const [minPriceReq, setMinPriceReq] = useState('');
   const [endTime, setEndTime] = useState('');
   const [vehicleTypeId, setVehicleTypeId] = useState('');
   const [makeId, setMakeId] = useState('');
@@ -108,6 +109,7 @@ export default function CreatePage() {
           startPrice: parseFloat(startPrice),
           currentPrice: parseFloat(startPrice),
           bidIncrement: parseFloat(bidIncrement),
+          minPriceReq: parseFloat(minPriceReq),
           endTime: endTime,
           sellerId: user.id,
           vehicleTypeId: vehicleTypeId,
@@ -149,6 +151,8 @@ export default function CreatePage() {
       setStartPrice(value);
     } else if (name === 'bidIncrement') {
       setBidIncrement(value);
+    } else if (name === 'minPriceReq') {
+      setMinPriceReq(value);
     } else if (name === 'endTime') {
       setEndTime(value);
     } else if (name === 'color') {
@@ -321,6 +325,21 @@ export default function CreatePage() {
             min="1"
             step="0.01"
             value={bidIncrement}
+            onChange={handleChange}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Minimum Price ($)
+          </label>
+          <input
+            type="number"
+            name="minPriceReq"
+            min="0"
+            step="0.01"
+            value={minPriceReq}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
