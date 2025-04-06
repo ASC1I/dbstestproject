@@ -12,12 +12,11 @@ export default function CreatePage() {
   const [startPrice, setStartPrice] = useState('');
   const [bidIncrement, setBidIncrement] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [vehicleType, setVehicleType] = useState('');
-  const [make, setMake] = useState('');
-  const [model, setModel] = useState('');
+  const [vehicleTypeId, setVehicleTypeId] = useState('');
+  const [makeId, setMakeId] = useState('');
+  const [modelId, setModelId] = useState('');
   const [color, setColor] = useState('');
   const [location, setLocation] = useState('');
-
 
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [makes, setMakes] = useState([]);
@@ -31,8 +30,6 @@ export default function CreatePage() {
   }, [router]);
 
   useEffect(() => {
-    fetchMake();
-    fetchModel();
     fetchVehicleType();
     checkAuth();
   }, [checkAuth]);
@@ -47,35 +44,38 @@ export default function CreatePage() {
       if (error) throw error;
       setVehicleTypes(data || []);
     } catch (error) {
-      console.error('Error fetching vehicle types:', error);
+      console.error('Error fetching VehicleType table:', error);
     }
   }
 
-  async function fetchMake() {
+  async function fetchMake(vehicleTypeId) {
     try {
       const { data, error } = await supabase
         .from('Make')
-        .select('*')
+        .select('*, vehicleTypes!inner(id)') // Include the relationship with VehicleType
+        .eq('vehicleTypes.id', vehicleTypeId) // Filter by the selected VehicleType ID
         .order('name');
-
+  
       if (error) throw error;
       setMakes(data || []);
+      setModels([]); // Reset models when vehicle type changes
     } catch (error) {
-      console.error('Error fetching makes:', error);
+      console.error('Error fetching Make table:', error);
     }
   }
 
-  async function fetchModel() {
+  async function fetchModel(makeId) {
     try {
       const { data, error } = await supabase
         .from('Model')
         .select('*')
+        .eq('makeId', makeId) // Filter by selected Make
         .order('name');
 
       if (error) throw error;
       setModels(data || []);
     } catch (error) {
-      console.error('Error fetching models:', error);
+      console.error('Error fetching Model table:', error);
     }
   }
 
@@ -91,13 +91,13 @@ export default function CreatePage() {
         {
           name,
           description,
-          start_price: parseFloat(startPrice), 
+          start_price: parseFloat(startPrice),
           bid_increment: parseFloat(bidIncrement),
           end_date: endDate,
           sellerId: user.id,
-          vehicleTypeId: vehicleType,
-          makeId: make,
-          modelId: model,
+          vehicleTypeId: vehicleTypeId,
+          makeId: makeId,
+          modelId: modelId,
           color,
           location,
         },
@@ -114,7 +114,18 @@ export default function CreatePage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'name') {
+    if (name === 'vehicleTypeId') {
+      setVehicleTypeId(value);
+      setMakeId(''); // Reset make when vehicle type changes
+      setModelId(''); // Reset model when vehicle type changes
+      fetchMake(value); // Fetch makes for the selected vehicle type
+    } else if (name === 'makeId') {
+      setMakeId(value);
+      setModelId(''); // Reset model when make changes
+      fetchModel(value); // Fetch models for the selected make
+    } else if (name === 'modelId') {
+      setModel(value);
+    } else if (name === 'name') {
       setName(value);
     } else if (name === 'description') {
       setDescription(value);
@@ -124,12 +135,6 @@ export default function CreatePage() {
       setBidIncrement(value);
     } else if (name === 'endDate') {
       setEndDate(value);
-    } else if (name === 'vehicleTypeId') {
-      setVehicleType(value);
-    } else if (name === 'makeId') {
-      setMake(value);
-    } else if (name === 'modelId') {
-      setModel(value);
     } else if (name === 'color') {
       setColor(value);
     } else if (name === 'location') {
@@ -175,7 +180,7 @@ export default function CreatePage() {
           <select
             name="vehicleTypeId"
             required
-            value={vehicleType}
+            value={vehicleTypeId}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           >
@@ -195,7 +200,7 @@ export default function CreatePage() {
           <select
             name="makeId"
             required
-            value={make}
+            value={makeId}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           >
@@ -215,7 +220,7 @@ export default function CreatePage() {
           <select
             name="modelId"
             required
-            value={model}
+            value={modelId}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           >
@@ -228,6 +233,7 @@ export default function CreatePage() {
           </select>
         </div>
 
+        {/* Other form fields like color, location, etc. */}
         <div>
           <label className="block text-sm font-medium text-gray-700">
             Color
