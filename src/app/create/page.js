@@ -74,12 +74,13 @@ export default function CreatePage() {
     }
   }
 
-  async function fetchModel(makeId) {
+  async function fetchModel(makeId, vehicleTypeId) {
     try {
       const { data, error } = await supabase
         .from('Model')
         .select('*')
         .eq('makeId', makeId) // Filter by selected Make
+        .eq('vehicleTypeId', vehicleTypeId) // Filter by selected Vehicle Type
         .order('name');
 
       if (error) throw error;
@@ -132,7 +133,7 @@ export default function CreatePage() {
     } else if (name === 'makeId') {
       setMakeId(value);
       setModelId(''); // Reset model when make changes
-      fetchModel(value); // Fetch models for the selected make
+      fetchModel(value, vehicleTypeId); // Fetch models for the selected make
     } else if (name === 'modelId') {
       setModelId(value);
     } else if (name === 'name') {
