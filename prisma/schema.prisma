@@ -25,7 +25,7 @@ model Profile {
 }
 
 model Vehicle {
-  id            String      
+  id            String      @id @default(cuid())
   name          String
   description   String?
   startPrice    Float
@@ -36,6 +36,7 @@ model Vehicle {
   status        String      @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
   color         String
   location      String
+  imageUrl      String?
   seller        Profile     @relation("UserVehicles", fields: [sellerId], references: [id])
   sellerId      String
   vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
@@ -45,6 +46,7 @@ model Vehicle {
   model         Model       @relation(fields: [modelId], references: [id])
   modelId       String
   bids          Bid[]
+  createdAt     DateTime    @default(now())
 }
 
 model VehicleType {
