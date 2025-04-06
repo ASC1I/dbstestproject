@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../utils/supabase';
+import cuid from 'cuid';
 
 export default function CreatePage() {
   const router = useRouter();
@@ -100,9 +101,11 @@ export default function CreatePage() {
 
       const { error } = await supabase.from('Vehicle').insert([
         {
+          id: cuid(),
           name,
           description,
           startPrice: parseFloat(startPrice),
+          currentPrice: parseFloat(startPrice),
           bidIncrement: parseFloat(bidIncrement),
           endTime: endTime,
           sellerId: user.id,

@@ -25,7 +25,7 @@ model Profile {
 }
 
 model Vehicle {
-  id            String      @id @default(cuid())
+  id            String      
   name          String
   description   String?
   startPrice    Float
