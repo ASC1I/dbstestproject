@@ -102,7 +102,7 @@ export default function CreatePage() {
         {
           name,
           description,
-          start_price: parseFloat(startPrice),
+          startPrice: parseFloat(startPrice),
           bidIncrement: parseFloat(bidIncrement),
           endTime: endTime,
           sellerId: user.id,
