@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '../../../utils/supabase';
+import cuid from 'cuid';
 
 export default function VehiclePage() {
   const { id } = useParams(); // Get the vehicle ID from the URL
@@ -88,6 +89,7 @@ export default function VehiclePage() {
         .from('Bid')
         .insert([
           {
+            id: cuid(),
             vehicleId: id,
             userId: user.id,
             amount: bidAmount,
