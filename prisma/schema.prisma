@@ -48,27 +48,29 @@ model Vehicle {
 }
 
 model VehicleType {
-  id      String    @id @default(cuid())
-  name    String    @unique
-  makes   Make[]
-  Vehicle Vehicle[]
+  id       String    @id @default(cuid())
+  name     String    @unique
+  makes    Make[]    @relation("VehicleTypeMakes")
+  vehicles Vehicle[]
+  Model    Model[]
 }
 
 model Make {
-  id            String      @id @default(cuid())
-  name          String      @unique
-  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
-  vehicleTypeId String
-  models        Model[]
-  Vehicle       Vehicle[]
+  id           String        @id @default(cuid())
+  name         String        @unique
+  vehicleTypes VehicleType[] @relation("VehicleTypeMakes")
+  models       Model[]
+  vehicles     Vehicle[]
 }
 
 model Model {
-  id       String    @id @default(cuid())
-  name     String
-  make     Make      @relation(fields: [makeId], references: [id])
-  makeId   String
-  vehicles Vehicle[]
+  id            String      @id @default(cuid())
+  name          String
+  make          Make        @relation(fields: [makeId], references: [id])
+  makeId        String
+  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
+  vehicleTypeId String
+  vehicles      Vehicle[]
 
   @@unique([makeId, name]) // Ensures model names are unique within a make
 }
