@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../utils/supabase';
 import VehicleCard from '../../components/VehicleCard';
+import Link from 'next/link';
 
 export default function MyItemsPage() {
   const [vehicles, setVehicles] = useState([]);
@@ -48,7 +49,9 @@ export default function MyItemsPage() {
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-8">My Items</h1>
       {vehicles.map((vehicle) => (
-        <VehicleCard key={vehicle.id} vehicle={vehicle} />
+        <Link key={vehicle.id} href={`/vehicle/${vehicle.id}`}>
+          <VehicleCard vehicle={vehicle} />
+        </Link>
       ))}
     </div>
   );

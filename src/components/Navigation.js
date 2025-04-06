@@ -31,7 +31,7 @@ export default function Navigation() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <span className="text-white text-xl font-bold">AuctionApp</span>
+                <span className="text-white text-xl font-bold">BUYME</span>
               </div>
             </div>
           </div>
@@ -52,7 +52,7 @@ export default function Navigation() {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <Link href="/" className="text-white text-xl font-bold">
-                AuctionApp
+                BUYME
               </Link>
             </div>
             <div className="hidden md:block">
