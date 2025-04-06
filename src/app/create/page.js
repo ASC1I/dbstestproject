@@ -11,7 +11,7 @@ export default function CreatePage() {
   const [description, setDescription] = useState('');
   const [startPrice, setStartPrice] = useState('');
   const [bidIncrement, setBidIncrement] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [vehicleTypeId, setVehicleTypeId] = useState('');
   const [makeId, setMakeId] = useState('');
   const [modelId, setModelId] = useState('');
@@ -103,8 +103,8 @@ export default function CreatePage() {
           name,
           description,
           start_price: parseFloat(startPrice),
-          bid_increment: parseFloat(bidIncrement),
-          end_date: endDate,
+          bidIncrement: parseFloat(bidIncrement),
+          endTime: endTime,
           sellerId: user.id,
           vehicleTypeId: vehicleTypeId,
           makeId: makeId,
@@ -144,8 +144,8 @@ export default function CreatePage() {
       setStartPrice(value);
     } else if (name === 'bidIncrement') {
       setBidIncrement(value);
-    } else if (name === 'endDate') {
-      setEndDate(value);
+    } else if (name === 'endTime') {
+      setEndTime(value);
     } else if (name === 'color') {
       setColor(value);
     } else if (name === 'location') {
@@ -311,9 +311,9 @@ export default function CreatePage() {
           </label>
           <input
             type="datetime-local"
-            name="endDate"
+            name="endTime"
             required
-            value={endDate}
+            value={endTime}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
