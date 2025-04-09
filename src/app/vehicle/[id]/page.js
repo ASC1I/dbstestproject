@@ -282,7 +282,10 @@ export default function VehiclePage() {
         <div className="space-y-4">
           {bids.length > 0 ? (
             bids.map((bid) => (
-              <div key={bid.createdAt} className="flex justify-between items-center border-b pb-2">
+              <div
+                key={`${bid.createdAt}-${bid.id}`} // Combine createdAt and id for a unique key
+                className="flex justify-between items-center border-b pb-2"
+              >
                 <div>
                   <p className="font-medium">{bid.user?.email || 'Unknown'}</p>
                   <p className="text-sm text-gray-500">{new Date(bid.createdAt).toLocaleString()}</p>
