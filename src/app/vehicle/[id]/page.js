@@ -9,7 +9,8 @@ export default function VehiclePage() {
   const { id } = useParams(); // Get the vehicle ID from the URL
   const [vehicle, setVehicle] = useState(null);
   const [bids, setBids] = useState([]);
-  const [newBid, setNewBid] = useState('');
+  const [manualBid, setManualBid] = useState('');
+  const [autoBidLimit, setAutoBidLimit] = useState('');
   const [loading, setLoading] = useState(true);
   const [bidding, setBidding] = useState(false);
   const [error, setError] = useState(null);
@@ -47,6 +48,7 @@ export default function VehiclePage() {
         .from('Bid')
         .select(`
           amount,
+          upperLimit,
           createdAt,
           user:Profile(email, id)
         `)
@@ -65,7 +67,7 @@ export default function VehiclePage() {
     setUser(user);
   }
 
-  async function handleBid(e) {
+  async function handleManualBid(e) {
     e.preventDefault();
     setError(null);
 
@@ -74,7 +76,7 @@ export default function VehiclePage() {
       return;
     }
 
-    const bidAmount = parseFloat(newBid);
+    const bidAmount = parseFloat(manualBid);
 
     // Validate bid amount
     const currentPrice = bids[0]?.amount || vehicle.startPrice;
@@ -104,10 +106,53 @@ export default function VehiclePage() {
 
       if (error) throw error;
 
-      setNewBid('');
+      setManualBid('');
       fetchBids(); // Refresh bids after placing a new one
     } catch (error) {
       console.error('Error placing bid:', error.message);
+      setError(error.message);
+    } finally {
+      setBidding(false);
+    }
+  }
+
+  async function handleAutoBid(e) {
+    e.preventDefault();
+    setError(null);
+
+    if (!user) {
+      alert('You must be logged in to place an automatic bid.');
+      return;
+    }
+
+    const upperLimit = parseFloat(autoBidLimit);
+
+    // Validate upper limit
+    if (isNaN(upperLimit) || upperLimit <= 0) {
+      setError('Please enter a valid upper limit for your automatic bid.');
+      return;
+    }
+
+    setBidding(true);
+    try {
+      const { error } = await supabase
+        .from('Bid')
+        .insert([
+          {
+            id: cuid(),
+            vehicleId: id,
+            userId: user.id,
+            amount: bids[0]?.amount || vehicle.startPrice, // Start with the current price
+            upperLimit: upperLimit,
+          },
+        ]);
+
+      if (error) throw error;
+
+      setAutoBidLimit('');
+      fetchBids(); // Refresh bids after placing a new one
+    } catch (error) {
+      console.error('Error placing automatic bid:', error.message);
       setError(error.message);
     } finally {
       setBidding(false);
@@ -173,29 +218,56 @@ export default function VehiclePage() {
         </div>
       </div>
 
-      {/* Bid Form */}
+      {/* Bid Forms */}
       {user && user.id !== vehicle.sellerId && vehicle.status !== 'FINISH' && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-bold mb-4">Place a Bid</h2>
-          <form onSubmit={handleBid} className="flex flex-col space-y-4">
-            <input
-              type="number"
-              min={currentPrice + vehicle.bidIncrement}
-              step="0.01"
-              value={newBid}
-              onChange={(e) => setNewBid(e.target.value)}
-              className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-              placeholder={`Enter bid amount (min: $${(currentPrice + vehicle.bidIncrement).toFixed(2)})`}
-            />
-            <button
-              type="submit"
-              disabled={bidding}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {bidding ? 'Placing Bid...' : 'Place Bid'}
-            </button>
-            {error && <p className="text-red-500">{error}</p>}
-          </form>
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Manual Bid Form */}
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Place a Manual Bid</h2>
+            <form onSubmit={handleManualBid} className="flex flex-col space-y-4">
+              <input
+                type="number"
+                min={currentPrice + vehicle.bidIncrement}
+                step="0.01"
+                value={manualBid}
+                onChange={(e) => setManualBid(e.target.value)}
+                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                placeholder={`Enter bid amount (min: $${(currentPrice + vehicle.bidIncrement).toFixed(2)})`}
+              />
+              <button
+                type="submit"
+                disabled={bidding}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {bidding ? 'Placing Bid...' : 'Place Manual Bid'}
+              </button>
+              {error && <p className="text-red-500">{error}</p>}
+            </form>
+          </div>
+
+          {/* Automatic Bid Form */}
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Place an Automatic Bid</h2>
+            <form onSubmit={handleAutoBid} className="flex flex-col space-y-4">
+              <input
+                type="number"
+                min={currentPrice + vehicle.bidIncrement}
+                step="0.01"
+                value={autoBidLimit}
+                onChange={(e) => setAutoBidLimit(e.target.value)}
+                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                placeholder="Enter your maximum bid limit"
+              />
+              <button
+                type="submit"
+                disabled={bidding}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {bidding ? 'Placing Automatic Bid...' : 'Place Automatic Bid'}
+              </button>
+              {error && <p className="text-red-500">{error}</p>}
+            </form>
+          </div>
         </div>
       )}
 
