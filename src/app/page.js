@@ -20,7 +20,6 @@ export default function HomePage() {
       let query = supabase
         .from('Vehicle')
         .select('*')
-        .eq('status', 'ACTIVE') // Only fetch active auctions
         .order('createdAt', { ascending: false }); // Order by creation date
 
       if (user) {
