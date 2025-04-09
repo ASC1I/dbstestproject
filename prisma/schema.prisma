@@ -34,7 +34,7 @@ model Vehicle {
   minPriceReq   Float?
   startTime     DateTime    @default(now())
   endTime       DateTime
-  status        String      @default("ACTIVE") // ACTIVE, SOLD, CANCELLED
+  status        String      @default("ACTIVE") // ACTIVE, FINISH, CANCELLED
   color         String
   location      String
   imageUrl      String?
