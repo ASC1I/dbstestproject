@@ -17,11 +17,13 @@ datasource db {
 }
 
 model Profile {
-  id        String    @id
-  email     String    @unique
-  vehicles  Vehicle[] @relation("UserVehicles")
-  bids      Bid[]
-  createdAt DateTime  @default(now())
+  id                   String                 @id
+  email                String                 @unique
+  vehicles             Vehicle[]              @relation("UserVehicles")
+  bids                 Bid[]
+  createdAt            DateTime               @default(now())
+  Alert                Alert[]
+  CategorySubscription CategorySubscription[]
 }
 
 model Vehicle {
@@ -51,29 +53,32 @@ model Vehicle {
 }
 
 model VehicleType {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  makes    Make[]    @relation("VehicleTypeMakes")
-  vehicles Vehicle[]
-  Model    Model[]
+  id                   String                 @id @default(cuid())
+  name                 String                 @unique
+  makes                Make[]                 @relation("VehicleTypeMakes")
+  vehicles             Vehicle[]
+  Model                Model[]
+  CategorySubscription CategorySubscription[]
 }
 
 model Make {
-  id           String        @id @default(cuid())
-  name         String        @unique
-  vehicleTypes VehicleType[] @relation("VehicleTypeMakes")
-  models       Model[]
-  vehicles     Vehicle[]
+  id                   String                 @id @default(cuid())
+  name                 String                 @unique
+  vehicleTypes         VehicleType[]          @relation("VehicleTypeMakes")
+  models               Model[]
+  vehicles             Vehicle[]
+  CategorySubscription CategorySubscription[]
 }
 
 model Model {
-  id            String      @id @default(cuid())
-  name          String
-  make          Make        @relation(fields: [makeId], references: [id])
-  makeId        String
-  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
-  vehicleTypeId String
-  vehicles      Vehicle[]
+  id                   String                 @id @default(cuid())
+  name                 String
+  make                 Make                   @relation(fields: [makeId], references: [id])
+  makeId               String
+  vehicleType          VehicleType            @relation(fields: [vehicleTypeId], references: [id])
+  vehicleTypeId        String
+  vehicles             Vehicle[]
+  CategorySubscription CategorySubscription[]
 
   @@unique([makeId, name]) // Ensures model names are unique within a make
 }
@@ -86,4 +91,25 @@ model Bid {
   userId    String
   vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
   vehicleId String
+}
+
+model Alert {
+  id        String   @id @default(cuid())
+  user      Profile  @relation(fields: [userId], references: [id])
+  userId    String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model CategorySubscription {
+  id            String      @id @default(cuid())
+  user          Profile     @relation(fields: [userId], references: [id])
+  userId        String
+  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
+  vehicleTypeId String
+  make          Make        @relation(fields: [makeId], references: [id])
+  makeId        String
+  model         Model       @relation(fields: [modelId], references: [id])
+  modelId       String
+  createdAt     DateTime    @default(now())
 }
