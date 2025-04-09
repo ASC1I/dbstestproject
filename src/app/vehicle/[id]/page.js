@@ -283,7 +283,7 @@ export default function VehiclePage() {
           {bids.length > 0 ? (
             bids.map((bid) => (
               <div
-                key={`${bid.createdAt}-${bid.id}`} // Combine createdAt and id for a unique key
+                key={bid.id} // Combine createdAt and id for a unique key
                 className="flex justify-between items-center border-b pb-2"
               >
                 <div>
