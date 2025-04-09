@@ -9,7 +9,7 @@ export default function VehiclePage() {
   const { id } = useParams(); // Get the vehicle ID from the URL
   const [vehicle, setVehicle] = useState(null);
   const [bids, setBids] = useState([]);
-  const [manualBid, setManualBid] = useState('');
+  const [manualBid, setManualBid] = useState(null);
   const [autoBidLimit, setAutoBidLimit] = useState('');
   const [loading, setLoading] = useState(true);
   const [bidding, setBidding] = useState(false);
@@ -72,27 +72,27 @@ export default function VehiclePage() {
   async function handleManualBid(e) {
     e.preventDefault();
     setError(null);
-
+  
     if (!user) {
       alert('You must be logged in to place a bid.');
       return;
     }
-
-    const bidAmount = parseFloat(manualBid);
-
+  
+    const bidAmount = parseFloat(manualBid || (bids[0]?.amount || vehicle.startPrice));
+  
     // Validate bid amount
     const currentPrice = bids[0]?.amount || vehicle.startPrice;
     if (isNaN(bidAmount) || bidAmount < currentPrice + vehicle.bidIncrement) {
       setError(`Bid must be at least $${(currentPrice + vehicle.bidIncrement).toFixed(2)}`);
       return;
     }
-
+  
     // Prevent user from bidding against themselves
     if (bids[0]?.user?.id === user.id) {
       setError('You are already the highest bidder.');
       return;
     }
-
+  
     setBidding(true);
     try {
       const { error } = await supabase
@@ -105,10 +105,10 @@ export default function VehiclePage() {
             amount: bidAmount,
           },
         ]);
-
+  
       if (error) throw error;
-
-      setManualBid('');
+  
+      setManualBid(null); // Reset manual bid
       fetchBids(); // Refresh bids after placing a new one
     } catch (error) {
       console.error('Error placing bid:', error.message);
@@ -227,15 +227,44 @@ export default function VehiclePage() {
           <div>
             <h2 className="text-2xl font-bold mb-4">Place a Manual Bid</h2>
             <form onSubmit={handleManualBid} className="flex flex-col space-y-4">
-              <input
-                type="number"
-                min={currentPrice + vehicle.bidIncrement}
-                step="0.01"
-                value={manualBid}
-                onChange={(e) => setManualBid(e.target.value)}
-                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder={`Enter bid amount (min: $${(currentPrice + vehicle.bidIncrement).toFixed(2)})`}
-              />
+              <div className="flex items-center space-x-4">
+                {/* Decrement Button */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setManualBid((prev) =>
+                      Math.max(
+                        (bids[0]?.amount || vehicle.startPrice) + vehicle.bidIncrement,
+                        parseFloat(prev || 0) - vehicle.bidIncrement
+                      )
+                    )
+                  }
+                  disabled={manualBid <= (bids[0]?.amount || vehicle.startPrice) + vehicle.bidIncrement}
+                  className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+                >
+                  -
+                </button>
+
+                {/* Display Current Bid */}
+                <span className="text-lg font-semibold">
+                  ${manualBid?.toFixed(2) || (bids[0]?.amount || vehicle.startPrice).toFixed(2)}
+                </span>
+
+                {/* Increment Button */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setManualBid((prev) =>
+                      parseFloat(prev || (bids[0]?.amount || vehicle.startPrice)) + vehicle.bidIncrement
+                    )
+                  }
+                  className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={bidding}
@@ -283,7 +312,7 @@ export default function VehiclePage() {
           {bids.length > 0 ? (
             bids.map((bid) => (
               <div
-                key={bid.id} // Combine createdAt and id for a unique key
+                key={bid.id}
                 className="flex justify-between items-center border-b pb-2"
               >
                 <div>
