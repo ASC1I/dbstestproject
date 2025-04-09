@@ -250,6 +250,9 @@ export default function VehiclePage() {
           {/* Automatic Bid Form */}
           <div>
             <h2 className="text-2xl font-bold mb-4">Place an Automatic Bid</h2>
+            <p className="text-sm text-gray-500 mb-2">
+              Set your maximum bid limit. The system will automatically place bids for you up to this limit if you are outbid.
+            </p>
             <form onSubmit={handleAutoBid} className="flex flex-col space-y-4">
               <input
                 type="number"
