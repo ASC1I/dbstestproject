@@ -48,10 +48,10 @@ export default function VehiclePage() {
         .select(`
           amount,
           createdAt,
-          user:Profile(email)
+          user:Profile(email, id)
         `)
         .eq('vehicleId', id)
-        .order('createdAt', { ascending: false });
+        .order('amount', { descending: true }); // Order by highest bid first
 
       if (error) throw error;
       setBids(data || []);
@@ -80,6 +80,12 @@ export default function VehiclePage() {
     const currentPrice = bids[0]?.amount || vehicle.startPrice;
     if (isNaN(bidAmount) || bidAmount < currentPrice + vehicle.bidIncrement) {
       setError(`Bid must be at least $${(currentPrice + vehicle.bidIncrement).toFixed(2)}`);
+      return;
+    }
+
+    // Prevent user from bidding against themselves
+    if (bids[0]?.user?.id === user.id) {
+      setError('You are already the highest bidder.');
       return;
     }
 
@@ -161,11 +167,14 @@ export default function VehiclePage() {
           <p className="text-gray-800">
             <strong>End Time:</strong> {new Date(vehicle.endTime).toLocaleString()}
           </p>
+          <p className="text-gray-800">
+            <strong>Status:</strong> {vehicle.status}
+          </p>
         </div>
       </div>
 
       {/* Bid Form */}
-      {user && user.id !== vehicle.sellerId && (
+      {user && user.id !== vehicle.sellerId && vehicle.status !== 'FINISH' && (
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-4">Place a Bid</h2>
           <form onSubmit={handleBid} className="flex flex-col space-y-4">
