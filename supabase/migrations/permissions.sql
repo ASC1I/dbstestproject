@@ -15,11 +15,7 @@ GRANT INSERT ON TABLE public."CategorySubscription" TO authenticated;
 GRANT UPDATE ON TABLE public."CategorySubscription" TO authenticated;
 GRANT SELECT ON TABLE public."CategorySubscription" TO authenticated;
 
-
 GRANT SELECT ON TABLE public."Vehicle" TO anon;
-
-
-
 
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT USAGE ON SCHEMA public TO anon;
