@@ -52,16 +52,18 @@ export default function VehiclePage() {
           createdAt,
           user:Profile(email, id)
         `)
-        .eq('vehicleId', id)
-        .order('amount', { descending: true }); // Order by highest bid first
-
+        .eq('vehicleId', id);
+  
       if (error) throw error;
-      setBids(data || []);
+  
+      // Sort bids by amount in descending order
+      const sortedBids = (data || []).sort((a, b) => b.amount - a.amount);
+      setBids(sortedBids);
     } catch (error) {
       console.error('Error fetching bids:', error.message);
     }
   }
-
+  
   async function checkUser() {
     const { data: { user } } = await supabase.auth.getUser();
     setUser(user);
