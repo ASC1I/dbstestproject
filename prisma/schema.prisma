@@ -24,6 +24,7 @@ model Profile {
   createdAt            DateTime               @default(now())
   Alert                Alert[]
   CategorySubscription CategorySubscription[]
+  AutoBid              AutoBid[]
 }
 
 model Vehicle {
@@ -50,6 +51,7 @@ model Vehicle {
   modelId       String
   bids          Bid[]
   createdAt     DateTime    @default(now())
+  AutoBid       AutoBid[]
 }
 
 model VehicleType {
@@ -84,14 +86,25 @@ model Model {
 }
 
 model Bid {
+  id        String   @id @default(cuid())
+  amount    Float
+  createdAt DateTime @default(now())
+  user      Profile  @relation(fields: [userId], references: [id])
+  userId    String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId String
+}
+
+model AutoBid {
   id         String   @id @default(cuid())
-  amount     Float
-  upperLimit Float?
+  upperLimit Float
   createdAt  DateTime @default(now())
   user       Profile  @relation(fields: [userId], references: [id])
   userId     String
   vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
   vehicleId  String
+
+  @@unique([vehicleId, userId]) // Add a unique constraint on vehicleId and userId
 }
 
 model Alert {

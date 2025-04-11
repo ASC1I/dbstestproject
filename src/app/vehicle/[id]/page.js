@@ -15,6 +15,9 @@ export default function VehiclePage() {
   const [bidding, setBidding] = useState(false);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  // Add separate state variables for manual and auto-bid errors
+  const [manualBidError, setManualBidError] = useState(null);
+  const [autoBidError, setAutoBidError] = useState(null);
 
   useEffect(() => {
     fetchVehicle();
@@ -48,7 +51,6 @@ export default function VehiclePage() {
         .from('Bid')
         .select(`
           amount,
-          upperLimit,
           createdAt,
           user:Profile(email, id)
         `)
@@ -71,7 +73,7 @@ export default function VehiclePage() {
 
   async function handleManualBid(e) {
     e.preventDefault();
-    setError(null);
+    setManualBidError(null); // Clear manual bid error
   
     if (!user) {
       alert('You must be logged in to place a bid.');
@@ -85,13 +87,13 @@ export default function VehiclePage() {
     const minimumBid = bids.length > 0 ? currentPrice + vehicle.bidIncrement : vehicle.startPrice;
   
     if (isNaN(bidAmount) || bidAmount < minimumBid) {
-      setError(`Bid must be at least $${minimumBid.toFixed(2)}`);
+      setManualBidError(`Bid must be at least $${minimumBid.toFixed(2)}`);
       return;
     }
   
     // Prevent user from bidding against themselves
     if (bids[0]?.user?.id === user.id) {
-      setError('You are already the highest bidder.');
+      setManualBidError('You are already the highest bidder.');
       return;
     }
   
@@ -114,7 +116,7 @@ export default function VehiclePage() {
       fetchBids(); // Refresh bids after placing a new one
     } catch (error) {
       console.error('Error placing bid:', error.message);
-      setError(error.message);
+      setManualBidError(error.message);
     } finally {
       setBidding(false);
     }
@@ -122,42 +124,44 @@ export default function VehiclePage() {
 
   async function handleAutoBid(e) {
     e.preventDefault();
-    setError(null);
-
+    setAutoBidError(null); // Clear auto-bid error
+  
     if (!user) {
-      alert('You must be logged in to place an automatic bid.');
+      alert('You must be logged in to set an automatic bid.');
       return;
     }
-
+  
     const upperLimit = parseFloat(autoBidLimit);
-
+  
     // Validate upper limit
     if (isNaN(upperLimit) || upperLimit <= 0) {
-      setError('Please enter a valid upper limit for your automatic bid.');
+      setAutoBidError('Please enter a valid upper limit for your automatic bid.');
       return;
     }
-
+  
     setBidding(true);
     try {
       const { error } = await supabase
-        .from('Bid')
-        .insert([
-          {
-            id: cuid(),
-            vehicleId: id,
-            userId: user.id,
-            amount: bids[0]?.amount || vehicle.startPrice, // Start with the current price
-            upperLimit: upperLimit,
-          },
-        ]);
-
+        .from('AutoBid')
+        .upsert(
+          [
+            {
+              id: cuid(), // Generate a new ID if inserting
+              vehicleId: id,
+              userId: user.id,
+              upperLimit: upperLimit, // Set the maximum bid limit
+            },
+          ],
+          { onConflict: ['vehicleId', 'userId'] } // Update if vehicleId and userId match
+        );
+  
       if (error) throw error;
-
-      setAutoBidLimit('');
-      fetchBids(); // Refresh bids after placing a new one
+  
+      setAutoBidLimit(''); // Reset the auto-bid limit input
+      fetchBids(); // Refresh bids to reflect any changes
     } catch (error) {
-      console.error('Error placing automatic bid:', error.message);
-      setError(error.message);
+      console.error('Error setting automatic bid:', error.message);
+      setAutoBidError(error.message);
     } finally {
       setBidding(false);
     }
@@ -274,7 +278,7 @@ export default function VehiclePage() {
               >
                 {bidding ? 'Placing Bid...' : 'Place Manual Bid'}
               </button>
-              {error && <p className="text-red-500">{error}</p>}
+              {manualBidError && <p className="text-red-500">{manualBidError}</p>}
             </form>
           </div>
 
@@ -285,36 +289,64 @@ export default function VehiclePage() {
               Set your maximum bid limit. The system will automatically place bids for you up to this limit if you are outbid.
             </p>
             <form onSubmit={handleAutoBid} className="flex flex-col space-y-4">
-              <input
-                type="number"
-                min={currentPrice + vehicle.bidIncrement}
-                step="0.01"
-                value={autoBidLimit}
-                onChange={(e) => setAutoBidLimit(e.target.value)}
-                className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                placeholder="Enter your maximum bid limit"
-              />
+              <div className="flex items-center space-x-4">
+                {/* Decrement Button */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setAutoBidLimit((prev) =>
+                      Math.max(
+                        currentPrice + vehicle.bidIncrement, // Minimum auto-bid limit
+                        parseFloat(prev || currentPrice + vehicle.bidIncrement) - vehicle.bidIncrement
+                      )
+                    )
+                  }
+                  disabled={parseFloat(autoBidLimit) <= currentPrice + vehicle.bidIncrement} // Disable if at minimum limit
+                  className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
+                >
+                  -
+                </button>
+
+                {/* Display Current Auto-Bid Limit */}
+                <span className="text-lg font-semibold">
+                  ${parseFloat(autoBidLimit || currentPrice + vehicle.bidIncrement).toFixed(2)}
+                </span>
+
+                {/* Increment Button */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setAutoBidLimit((prev) =>
+                      parseFloat(prev || currentPrice + vehicle.bidIncrement) + vehicle.bidIncrement
+                    )
+                  }
+                  className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={bidding}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {bidding ? 'Placing Automatic Bid...' : 'Place Automatic Bid'}
+                {bidding ? 'Setting Automatic Bid...' : 'Set Automatic Bid'}
               </button>
-              {error && <p className="text-red-500">{error}</p>}
+              {autoBidError && <p className="text-red-500">{autoBidError}</p>}
             </form>
           </div>
         </div>
       )}
-
       {/* Bid History */}
       <div className="mt-8">
         <h2 className="text-2xl font-bold mb-4">Bid History</h2>
         <div className="space-y-4">
           {bids.length > 0 ? (
-            bids.map((bid) => (
+            bids.map((bid, index) => (
               <div
-                key={bid.id}
+                key={bid.id || index} // Use bid.id if available, otherwise fallback to index
                 className="flex justify-between items-center border-b pb-2"
               >
                 <div>

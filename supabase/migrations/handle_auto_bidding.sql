@@ -7,9 +7,8 @@ BEGIN
   -- Find the next eligible auto-bidder
   SELECT *
   INTO auto_bidder
-  FROM "Bid"
+  FROM "AutoBid"
   WHERE "vehicleId" = NEW."vehicleId"
-    AND "upperLimit" IS NOT NULL
     AND "upperLimit" >= (NEW."amount" + (SELECT "bidIncrement" FROM "Vehicle" WHERE "id" = NEW."vehicleId"))
     AND "userId" != NEW."userId"
   ORDER BY "upperLimit" DESC, "createdAt" ASC
@@ -25,13 +24,12 @@ BEGIN
     END IF;
 
     -- Insert the new automatic bid
-    INSERT INTO "Bid" ("id", "vehicleId", "userId", "amount", "upperLimit", "createdAt")
+    INSERT INTO "Bid" ("id", "vehicleId", "userId", "amount", "createdAt")
     VALUES (
       gen_random_uuid(),
       NEW."vehicleId",
       auto_bidder."userId",
       new_bid_amount,
-      auto_bidder."upperLimit",
       NOW()
     );
   END IF;
