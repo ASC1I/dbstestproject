@@ -82,8 +82,10 @@ export default function VehiclePage() {
   
     // Validate bid amount
     const currentPrice = bids[0]?.amount || vehicle.startPrice;
-    if (isNaN(bidAmount) || bidAmount < currentPrice + vehicle.bidIncrement) {
-      setError(`Bid must be at least $${(currentPrice + vehicle.bidIncrement).toFixed(2)}`);
+    const minimumBid = bids.length > 0 ? currentPrice + vehicle.bidIncrement : vehicle.startPrice;
+  
+    if (isNaN(bidAmount) || bidAmount < minimumBid) {
+      setError(`Bid must be at least $${minimumBid.toFixed(2)}`);
       return;
     }
   
@@ -234,12 +236,12 @@ export default function VehiclePage() {
                   onClick={() =>
                     setManualBid((prev) =>
                       Math.max(
-                        (bids[0]?.amount || vehicle.startPrice) + vehicle.bidIncrement,
-                        parseFloat(prev || 0) - vehicle.bidIncrement
+                        vehicle.startPrice, // Allow decrementing to the starting price when there are no bids
+                        parseFloat(prev || vehicle.startPrice) - vehicle.bidIncrement
                       )
                     )
                   }
-                  disabled={manualBid <= (bids[0]?.amount || vehicle.startPrice) + vehicle.bidIncrement}
+                  disabled={manualBid <= vehicle.startPrice} // Disable if the bid is already at the starting price
                   className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
                 >
                   -
@@ -247,7 +249,7 @@ export default function VehiclePage() {
 
                 {/* Display Current Bid */}
                 <span className="text-lg font-semibold">
-                  ${manualBid?.toFixed(2) || (bids[0]?.amount || vehicle.startPrice).toFixed(2)}
+                  ${manualBid?.toFixed(2) || vehicle.startPrice.toFixed(2)}
                 </span>
 
                 {/* Increment Button */}
@@ -255,7 +257,7 @@ export default function VehiclePage() {
                   type="button"
                   onClick={() =>
                     setManualBid((prev) =>
-                      parseFloat(prev || (bids[0]?.amount || vehicle.startPrice)) + vehicle.bidIncrement
+                      parseFloat(prev || vehicle.startPrice) + vehicle.bidIncrement
                     )
                   }
                   className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400"

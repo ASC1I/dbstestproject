@@ -263,7 +263,6 @@ export default function CreatePage() {
           <input
             type="text"
             name="color"
-            required
             value={color}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
@@ -277,7 +276,6 @@ export default function CreatePage() {
           <input
             type="text"
             name="location"
-            required
             value={location}
             onChange={handleChange}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
@@ -354,6 +352,7 @@ export default function CreatePage() {
             required
             value={endTime}
             onChange={handleChange}
+            min={new Date().toISOString().slice(0, 16)} // Set the minimum to the current datetime
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
         </div>
