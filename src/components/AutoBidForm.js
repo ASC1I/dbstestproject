@@ -10,42 +10,43 @@ export default function AutoBidForm({ vehicle, bids, user, minimumBid, onBidPlac
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
-  
+
     if (!user) {
-      alert('You must be logged in to set an automatic bid.');
-      return;
+        alert('You must be logged in to set an automatic bid.');
+        return;
     }
-  
+
     const upperLimit = parseFloat(autoBidLimit || minimumBid);
-  
+
     if (isNaN(upperLimit) || upperLimit < minimumBid) {
-      setError(`Automatic bid limit must be at least $${minimumBid.toFixed(2)}`);
-      return;
+        setError(`Automatic bid limit must be at least $${minimumBid.toFixed(2)}`);
+        return;
     }
-  
+
     setBidding(true);
     try {
-      const { error } = await supabase
-        .from('AutoBid')
-        .upsert(
-          [{
-            id: cuid(),
-            vehicleId: vehicle.id,
-            userId: user.id,
-            upperLimit: upperLimit,
-          }],
-          { onConflict: ['vehicleId', 'userId'] }
-        );
-  
-      if (error) throw error;
-  
-      setAutoBidLimit('');
-      onBidPlaced();
+        const { error } = await supabase
+            .from('AutoBid')
+            .upsert(
+                [{
+                    id: cuid(),
+                    vehicleId: vehicle.id,
+                    userId: user.id,
+                    upperLimit: upperLimit,
+                    updatedAt: new Date().toISOString() // Set updatedAt to the current timestamp
+                }],
+                { onConflict: ['vehicleId', 'userId'] }
+            );
+
+        if (error) throw error;
+
+        setAutoBidLimit('');
+        onBidPlaced();
     } catch (error) {
-      console.error('Error setting automatic bid:', error.message);
-      setError(error.message);
+        console.error('Error setting automatic bid:', error.message);
+        setError(error.message);
     } finally {
-      setBidding(false);
+        setBidding(false);
     }
   }
 
