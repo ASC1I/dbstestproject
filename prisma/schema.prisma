@@ -37,8 +37,8 @@ model Vehicle {
   startTime     DateTime    @default(now())
   endTime       DateTime
   status        String      @default("ACTIVE") // ACTIVE, FINISH, CANCELLED
-  color         String
-  location      String
+  color         String?
+  location      String?
   imageUrl      String?
   seller        Profile     @relation("UserVehicles", fields: [sellerId], references: [id])
   sellerId      String
