@@ -33,7 +33,7 @@ export default function AutoBidForm({ vehicle, bids, user, minimumBid, onBidPlac
                     vehicleId: vehicle.id,
                     userId: user.id,
                     upperLimit: upperLimit,
-                    updatedAt: new Date().toISOString() // Set updatedAt to the current timestamp
+                    updatedAt: new Date().toLocaleString() // Set updatedAt to the current timestamp
                 }],
                 { onConflict: ['vehicleId', 'userId'] }
             );

@@ -37,7 +37,7 @@ export default function ManualBidForm({ vehicle, bids, user, minimumBid, onBidPl
           vehicleId: vehicle.id,
           userId: user.id,
           amount: bidAmount,
-          createdAt: new Date().toISOString() // Set createdAt to the current timestamp
+          createdAt: new Date().toLocaleString() // Set createdAt to the local timestamp
         }]);
   
       if (error) throw error;
