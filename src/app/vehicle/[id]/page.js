@@ -13,9 +13,7 @@ export default function VehiclePage() {
   const [autoBidLimit, setAutoBidLimit] = useState('');
   const [loading, setLoading] = useState(true);
   const [bidding, setBidding] = useState(false);
-  const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
-  // Add separate state variables for manual and auto-bid errors
   const [manualBidError, setManualBidError] = useState(null);
   const [autoBidError, setAutoBidError] = useState(null);
 
@@ -80,11 +78,9 @@ export default function VehiclePage() {
       return;
     }
   
-    const bidAmount = parseFloat(manualBid || (bids[0]?.amount || vehicle.startPrice));
-  
-    // Validate bid amount
     const currentPrice = bids[0]?.amount || vehicle.startPrice;
-    const minimumBid = bids.length > 0 ? currentPrice + vehicle.bidIncrement : vehicle.startPrice;
+    const minimumBid = currentPrice + (bids.length > 0 ? vehicle.bidIncrement : 0);
+    const bidAmount = parseFloat(manualBid || minimumBid);
   
     if (isNaN(bidAmount) || bidAmount < minimumBid) {
       setManualBidError(`Bid must be at least $${minimumBid.toFixed(2)}`);
@@ -131,11 +127,13 @@ export default function VehiclePage() {
       return;
     }
   
-    const upperLimit = parseFloat(autoBidLimit);
+    const currentPrice = bids[0]?.amount || vehicle.startPrice;
+    const minimumBid = currentPrice + (bids.length > 0 ? vehicle.bidIncrement : 0);
+    const upperLimit = parseFloat(autoBidLimit || minimumBid);
   
     // Validate upper limit
-    if (isNaN(upperLimit) || upperLimit <= 0) {
-      setAutoBidError('Please enter a valid upper limit for your automatic bid.');
+    if (isNaN(upperLimit) || upperLimit < minimumBid) {
+      setAutoBidError(`Automatic bid limit must be at least $${minimumBid.toFixed(2)}`);
       return;
     }
   
@@ -176,6 +174,7 @@ export default function VehiclePage() {
   }
 
   const currentPrice = bids[0]?.amount || vehicle.startPrice;
+  const minimumBid = currentPrice + (bids.length > 0 ? vehicle.bidIncrement : 0);
 
   return (
     <div className="max-w-4xl mx-auto p-4">
@@ -204,6 +203,9 @@ export default function VehiclePage() {
           </p>
           <p className="text-gray-800">
             <strong>Current Price:</strong> ${currentPrice.toFixed(2)}
+          </p>
+          <p className="text-gray-800">
+            <strong>Minimum Next Bid:</strong> ${minimumBid.toFixed(2)}
           </p>
           <p className="text-gray-800">
             <strong>Bid Increment:</strong> ${vehicle.bidIncrement.toFixed(2)}
@@ -240,12 +242,12 @@ export default function VehiclePage() {
                   onClick={() =>
                     setManualBid((prev) =>
                       Math.max(
-                        vehicle.startPrice, // Allow decrementing to the starting price when there are no bids
-                        parseFloat(prev || vehicle.startPrice) - vehicle.bidIncrement
+                        minimumBid,
+                        parseFloat(prev || minimumBid) - vehicle.bidIncrement
                       )
                     )
                   }
-                  disabled={manualBid <= vehicle.startPrice} // Disable if the bid is already at the starting price
+                  disabled={manualBid <= minimumBid}
                   className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
                 >
                   -
@@ -253,7 +255,7 @@ export default function VehiclePage() {
 
                 {/* Display Current Bid */}
                 <span className="text-lg font-semibold">
-                  ${manualBid?.toFixed(2) || vehicle.startPrice.toFixed(2)}
+                  ${manualBid?.toFixed(2) || minimumBid.toFixed(2)}
                 </span>
 
                 {/* Increment Button */}
@@ -261,7 +263,7 @@ export default function VehiclePage() {
                   type="button"
                   onClick={() =>
                     setManualBid((prev) =>
-                      parseFloat(prev || vehicle.startPrice) + vehicle.bidIncrement
+                      parseFloat(prev || minimumBid) + vehicle.bidIncrement
                     )
                   }
                   className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400"
@@ -296,12 +298,12 @@ export default function VehiclePage() {
                   onClick={() =>
                     setAutoBidLimit((prev) =>
                       Math.max(
-                        currentPrice + vehicle.bidIncrement, // Minimum auto-bid limit
-                        parseFloat(prev || currentPrice + vehicle.bidIncrement) - vehicle.bidIncrement
+                        minimumBid,
+                        parseFloat(prev || minimumBid) - vehicle.bidIncrement
                       )
                     )
                   }
-                  disabled={parseFloat(autoBidLimit) <= currentPrice + vehicle.bidIncrement} // Disable if at minimum limit
+                  disabled={parseFloat(autoBidLimit) <= minimumBid}
                   className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50"
                 >
                   -
@@ -309,7 +311,7 @@ export default function VehiclePage() {
 
                 {/* Display Current Auto-Bid Limit */}
                 <span className="text-lg font-semibold">
-                  ${parseFloat(autoBidLimit || currentPrice + vehicle.bidIncrement).toFixed(2)}
+                  ${parseFloat(autoBidLimit || minimumBid).toFixed(2)}
                 </span>
 
                 {/* Increment Button */}
@@ -317,7 +319,7 @@ export default function VehiclePage() {
                   type="button"
                   onClick={() =>
                     setAutoBidLimit((prev) =>
-                      parseFloat(prev || currentPrice + vehicle.bidIncrement) + vehicle.bidIncrement
+                      parseFloat(prev || minimumBid) + vehicle.bidIncrement
                     )
                   }
                   className="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400"
@@ -346,7 +348,7 @@ export default function VehiclePage() {
           {bids.length > 0 ? (
             bids.map((bid, index) => (
               <div
-                key={bid.id || index} // Use bid.id if available, otherwise fallback to index
+                key={bid.id || index}
                 className="flex justify-between items-center border-b pb-2"
               >
                 <div>
