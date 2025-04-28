@@ -141,3 +141,13 @@ model CustomerRep {
   password  String // Store hashed passwords
   createdAt DateTime @default(now())
 }
+
+model Message {
+  id          String   @id @default(cuid())
+  senderId    String // ID of the sender (user or customer rep)
+  senderType  String // "USER" or "CUSTOMER_REP"
+  recipientId String // ID of the recipient (user or customer rep)
+  content     String // Message content
+  createdAt   DateTime @default(now())
+  isRead      Boolean  @default(false) // Whether the message has been read
+}
