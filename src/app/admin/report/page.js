@@ -54,37 +54,53 @@ export default function AdminDashboard() {
       <p>Welcome to the admin dashboard. Here is the sales report:</p>
 
       <h2 className="text-2xl font-bold mt-6">Total Earnings</h2>
-      <p>${report.total_earnings}</p>
+      <p>${report?.total_earnings ?? 'No data available'}</p>
 
       <h2 className="text-2xl font-bold mt-6">Earnings by Vehicle Type</h2>
       <ul>
-        {report.earnings_by_vehicle_type.map((type, index) => (
-          <li key={index}>
-            {type.vehicle_type}: ${type.earnings}
-          </li>
-        ))}
+        {report?.earnings_by_vehicle_type?.length > 0 ? (
+          report.earnings_by_vehicle_type.map((type, index) => (
+            <li key={index}>
+              {type.vehicle_type}: ${type.earnings}
+            </li>
+          ))
+        ) : (
+          <li className="text-gray-500">No data available</li>
+        )}
       </ul>
 
       <h2 className="text-2xl font-bold mt-6">Earnings by Make</h2>
       <ul>
-        {report.earnings_by_make.map((make, index) => (
-          <li key={index}>
-            {make.make}: ${make.earnings}
-          </li>
-        ))}
+        {report?.earnings_by_make?.length > 0 ? (
+          report.earnings_by_make.map((make, index) => (
+            <li key={index}>
+              {make.make}: ${make.earnings}
+            </li>
+          ))
+        ) : (
+          <li className="text-gray-500">No data available</li>
+        )}
       </ul>
 
       <h2 className="text-2xl font-bold mt-6">Best Buyer</h2>
-      <p>
-        {report.best_buyer.buyer_email} (Total Spent: $
-        {report.best_buyer.total_spent})
-      </p>
+      {report?.best_buyer ? (
+        <p>
+          {report.best_buyer.buyer_email} (Total Spent: $
+          {report.best_buyer.total_spent})
+        </p>
+      ) : (
+        <p className="text-gray-500">No best buyer data available.</p>
+      )}
 
       <h2 className="text-2xl font-bold mt-6">Best-Selling Item</h2>
-      <p>
-        {report.best_selling_item.vehicle_name} (Sale Price: $
-        {report.best_selling_item.sale_price})
-      </p>
+      {report?.best_selling_item ? (
+        <p>
+          {report.best_selling_item.vehicle_name} (Sale Price: $
+          {report.best_selling_item.sale_price})
+        </p>
+      ) : (
+        <p className="text-gray-500">No best-selling item data available.</p>
+      )}
     </div>
   );
 }
