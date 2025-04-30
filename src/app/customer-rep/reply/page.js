@@ -4,16 +4,31 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase';
 import { sendMessage, getMessages } from '@/utils/messageService';
 import cuid from 'cuid';
+import { useRouter } from 'next/navigation';
 
 export default function CustomerRepReplyPage() {
+  const router = useRouter();
   const [unreadMessages, setUnreadMessages] = useState([]); // List of users with unread messages
   const [messages, setMessages] = useState([]); // Messages for the selected user
   const [newMessage, setNewMessage] = useState('');
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [loading, setLoading] = useState(true); // Loading state
   const CUSTOMER_REP_ID = 'CUSTOMER_REP_ID'; // Replace with the actual customer rep ID
+
+  // Check if the customer representative is logged in
+  useEffect(() => {
+    const isCustomerRepLoggedIn = localStorage.getItem('isCustomerRepLoggedIn');
+    if (!isCustomerRepLoggedIn) {
+      router.push('/customer-rep'); // Redirect to login page if not logged in
+    } else {
+      setLoading(false); // Stop loading if customer rep is logged in
+    }
+  }, [router]);
 
   // Fetch unread messages from users
   useEffect(() => {
+    if (loading) return; // Skip fetching if still loading
+
     const fetchUnreadMessages = async () => {
       try {
         const { data, error } = await supabase
@@ -47,46 +62,46 @@ export default function CustomerRepReplyPage() {
     };
 
     fetchUnreadMessages();
-  }, [CUSTOMER_REP_ID]);
+  }, [CUSTOMER_REP_ID, loading]);
 
   // Fetch messages for the selected user
   useEffect(() => {
+    if (loading || !selectedUserId) return; // Skip fetching if still loading or no user selected
+
     const fetchMessages = async () => {
       try {
-        if (selectedUserId) {
-          const data = await getMessages(selectedUserId);
-          setMessages(data);
+        const data = await getMessages(selectedUserId);
+        setMessages(data);
 
-          // Mark all messages from this user as read
-          await supabase
-            .from('Message')
-            .update({ isRead: true })
-            .eq('senderId', selectedUserId)
-            .eq('recipientId', CUSTOMER_REP_ID);
-        }
+        // Mark all messages from this user as read
+        await supabase
+          .from('Message')
+          .update({ isRead: true })
+          .eq('senderId', selectedUserId)
+          .eq('recipientId', CUSTOMER_REP_ID);
       } catch (err) {
         console.error(err.message);
       }
     };
 
     fetchMessages();
-  }, [selectedUserId, CUSTOMER_REP_ID]);
+  }, [selectedUserId, CUSTOMER_REP_ID, loading]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-  
+
     if (!newMessage.trim()) {
       console.error('Message content is empty.');
       return;
     }
 
     const messageId = cuid();
-  
+
     try {
       console.log('Sending message:', newMessage); // Debugging log
-      await sendMessage(messageId, CUSTOMER_REP_ID, 'CUSTOMER_REP', selectedUserId, 'Customer Rep: '+newMessage);
+      await sendMessage(messageId, CUSTOMER_REP_ID, 'CUSTOMER_REP', selectedUserId, 'Customer Rep: ' + newMessage);
       setNewMessage(''); // Clear the input field after sending the message
-  
+
       // Fetch updated messages
       const updatedMessages = await getMessages(selectedUserId);
       setMessages(updatedMessages);
@@ -94,6 +109,10 @@ export default function CustomerRepReplyPage() {
       console.error('Error sending message:', err.message);
     }
   };
+
+  if (loading) {
+    return <div className="text-center mt-10">Loading...</div>; // Display loading state
+  }
 
   return (
     <div className="max-w-4xl mx-auto mt-10">

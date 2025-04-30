@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase';
 
@@ -10,6 +10,17 @@ export default function CreateCustomerRepPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [loading, setLoading] = useState(true); // Loading state
+
+  useEffect(() => {
+    // Check if the admin is logged in
+    const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
+    if (!isAdminLoggedIn) {
+      router.push('/admin'); // Redirect to login page if not logged in
+    } else {
+      setLoading(false); // Stop loading if admin is logged in
+    }
+  }, [router]);
 
   const handleCreateCustomerRep = async (e) => {
     e.preventDefault();
@@ -39,6 +50,10 @@ export default function CreateCustomerRepPage() {
       setError('An unexpected error occurred. Please try again.');
     }
   };
+
+  if (loading) {
+    return <div className="text-center mt-10">Loading...</div>; // Display loading state
+  }
 
   return (
     <div className="max-w-md mx-auto mt-10">
