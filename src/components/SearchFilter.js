@@ -48,13 +48,19 @@ export default function SearchFilter({ onFilterChange }) {
     }
   }
 
-  async function fetchModels(makeId) {
+  async function fetchModels(vehicleTypeId, makeId) {
     try {
-      const { data, error } = await supabase
-        .from('Model')
-        .select('*')
-        .eq('makeId', makeId) // Filter by selected Make
-        .order('name');
+      let query = supabase.from('Model').select('*').order('name');
+
+      // Apply filters based on selected VehicleType and Make
+      if (vehicleTypeId) {
+        query = query.eq('vehicleTypeId', vehicleTypeId);
+      }
+      if (makeId) {
+        query = query.eq('makeId', makeId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching models:', error.message);
@@ -69,7 +75,10 @@ export default function SearchFilter({ onFilterChange }) {
   function handleVehicleTypeChange(e) {
     const vehicleTypeId = e.target.value;
     setSelectedVehicleType(vehicleTypeId);
-    onFilterChange({ vehicleTypeId, makeId: selectedMake, modelId: selectedModel });
+    setSelectedModel('');
+    setModels([]); // Reset models when vehicle type changes
+    fetchModels(vehicleTypeId, selectedMake); // Fetch models based on the new vehicle type
+    onFilterChange({ vehicleTypeId, makeId: selectedMake, modelId: '' });
   }
 
   function handleMakeChange(e) {
@@ -77,9 +86,7 @@ export default function SearchFilter({ onFilterChange }) {
     setSelectedMake(makeId);
     setSelectedModel('');
     setModels([]); // Reset models when make changes
-    if (makeId) {
-      fetchModels(makeId);
-    }
+    fetchModels(selectedVehicleType, makeId); // Fetch models based on the new make
     onFilterChange({ vehicleTypeId: selectedVehicleType, makeId, modelId: '' });
   }
 
