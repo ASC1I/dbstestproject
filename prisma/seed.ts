@@ -26,48 +26,78 @@ async function main() {
     throw new Error('One or more vehicle types could not be found.');
   }
 
-  // Create default makes and associate them with vehicle types
-  const toyota = await prisma.make.create({
-    data: {
+  // Upsert makes and associate them with multiple vehicle types
+  const toyota = await prisma.make.upsert({
+    where: { name: 'Toyota' },
+    update: {
+      vehicleTypes: {
+        connect: [{ id: suvType.id }, { id: sedanType.id }, { id: truckType.id }],
+      },
+    },
+    create: {
       name: 'Toyota',
       vehicleTypes: {
-        connect: [{ id: suvType.id }, { id: sedanType.id }],
+        connect: [{ id: suvType.id }, { id: sedanType.id }, { id: truckType.id }],
       },
     },
   });
 
-  const honda = await prisma.make.create({
-    data: {
+  const honda = await prisma.make.upsert({
+    where: { name: 'Honda' },
+    update: {
+      vehicleTypes: {
+        connect: [{ id: sedanType.id }, { id: suvType.id }],
+      },
+    },
+    create: {
       name: 'Honda',
       vehicleTypes: {
-        connect: [{ id: sedanType.id }],
+        connect: [{ id: sedanType.id }, { id: suvType.id }],
       },
     },
   });
 
-  const bmw = await prisma.make.create({
-    data: {
+  const bmw = await prisma.make.upsert({
+    where: { name: 'BMW' },
+    update: {
+      vehicleTypes: {
+        connect: [{ id: coupeType.id }, { id: suvType.id }, { id: sedanType.id }],
+      },
+    },
+    create: {
       name: 'BMW',
       vehicleTypes: {
-        connect: [{ id: coupeType.id }, { id: suvType.id }],
+        connect: [{ id: coupeType.id }, { id: suvType.id }, { id: sedanType.id }],
       },
     },
   });
 
-  const ford = await prisma.make.create({
-    data: {
+  const ford = await prisma.make.upsert({
+    where: { name: 'Ford' },
+    update: {
+      vehicleTypes: {
+        connect: [{ id: truckType.id }, { id: suvType.id }, { id: coupeType.id }],
+      },
+    },
+    create: {
       name: 'Ford',
       vehicleTypes: {
-        connect: [{ id: truckType.id }, { id: suvType.id }],
+        connect: [{ id: truckType.id }, { id: suvType.id }, { id: coupeType.id }],
       },
     },
   });
 
-  const chevrolet = await prisma.make.create({
-    data: {
+  const chevrolet = await prisma.make.upsert({
+    where: { name: 'Chevrolet' },
+    update: {
+      vehicleTypes: {
+        connect: [{ id: truckType.id }, { id: motorcycleType.id }, { id: suvType.id }],
+      },
+    },
+    create: {
       name: 'Chevrolet',
       vehicleTypes: {
-        connect: [{ id: truckType.id }, { id: motorcycleType.id }],
+        connect: [{ id: truckType.id }, { id: motorcycleType.id }, { id: suvType.id }],
       },
     },
   });
@@ -75,13 +105,31 @@ async function main() {
   // Create default models and associate them with makes and vehicle types
   await prisma.model.createMany({
     data: [
+      // Toyota Models
       { name: 'Camry', makeId: toyota.id, vehicleTypeId: sedanType.id },
       { name: 'Corolla', makeId: toyota.id, vehicleTypeId: sedanType.id },
       { name: 'RAV4', makeId: toyota.id, vehicleTypeId: suvType.id },
+      { name: 'Tacoma', makeId: toyota.id, vehicleTypeId: truckType.id },
+
+      // Honda Models
       { name: 'Civic', makeId: honda.id, vehicleTypeId: sedanType.id },
       { name: 'Accord', makeId: honda.id, vehicleTypeId: sedanType.id },
+      { name: 'CR-V', makeId: honda.id, vehicleTypeId: suvType.id },
+
+      // BMW Models
       { name: 'X5', makeId: bmw.id, vehicleTypeId: suvType.id },
       { name: '3 Series', makeId: bmw.id, vehicleTypeId: coupeType.id },
+      { name: '5 Series', makeId: bmw.id, vehicleTypeId: sedanType.id },
+
+      // Ford Models
+      { name: 'F-150', makeId: ford.id, vehicleTypeId: truckType.id },
+      { name: 'Explorer', makeId: ford.id, vehicleTypeId: suvType.id },
+      { name: 'Mustang', makeId: ford.id, vehicleTypeId: coupeType.id },
+
+      // Chevrolet Models
+      { name: 'Silverado', makeId: chevrolet.id, vehicleTypeId: truckType.id },
+      { name: 'Colorado', makeId: chevrolet.id, vehicleTypeId: truckType.id },
+      { name: 'Trailblazer', makeId: chevrolet.id, vehicleTypeId: suvType.id },
     ],
     skipDuplicates: true,
   });
