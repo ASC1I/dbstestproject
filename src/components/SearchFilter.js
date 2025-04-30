@@ -11,6 +11,7 @@ export default function SearchFilter({ onFilterChange }) {
 
   useEffect(() => {
     fetchVehicleTypes();
+    fetchMakes(); // Fetch all makes initially
   }, []);
 
   async function fetchVehicleTypes() {
@@ -30,40 +31,29 @@ export default function SearchFilter({ onFilterChange }) {
     }
   }
 
-  async function fetchMakes(vehicleTypeId) {
+  async function fetchMakes() {
     try {
-      // Query the `_VehicleTypeMakes` table to get the related makes
-      const { data: vehicleTypeMakes, error: innerError } = await supabase
-        .from('_VehicleTypeMakes')
-        .select('A') // 'A' refers to the `Make` IDs
-        .eq('B', vehicleTypeId); // 'B' refers to the `VehicleType` ID
-
-      if (innerError) throw innerError;
-
-      // Use the retrieved Make IDs to fetch the actual Make details
-      const makeIds = vehicleTypeMakes.map((item) => item.A);
-      const { data: makes, error: outerError } = await supabase
+      const { data, error } = await supabase
         .from('Make')
         .select('id, name')
-        .in('id', makeIds)
         .order('name');
 
-      if (outerError) throw outerError;
-
-      setMakes(makes || []);
-      setModels([]); // Reset models when vehicle type changes
+      if (error) {
+        console.error('Error fetching makes:', error.message);
+      } else {
+        setMakes(data || []);
+      }
     } catch (error) {
-      console.error('Error fetching makes:', error.message || error);
+      console.error('Error fetching makes:', error.message);
     }
   }
 
-  async function fetchModels(makeId, vehicleTypeId) {
+  async function fetchModels(makeId) {
     try {
       const { data, error } = await supabase
         .from('Model')
         .select('*')
         .eq('makeId', makeId) // Filter by selected Make
-        .eq('vehicleTypeId', vehicleTypeId) // Filter by selected Vehicle Type
         .order('name');
 
       if (error) {
@@ -79,23 +69,16 @@ export default function SearchFilter({ onFilterChange }) {
   function handleVehicleTypeChange(e) {
     const vehicleTypeId = e.target.value;
     setSelectedVehicleType(vehicleTypeId);
-    setSelectedMake('');
-    setSelectedModel('');
-    setMakes([]);
-    setModels([]);
-    if (vehicleTypeId) {
-      fetchMakes(vehicleTypeId);
-    }
-    onFilterChange({ vehicleTypeId, makeId: '', modelId: '' });
+    onFilterChange({ vehicleTypeId, makeId: selectedMake, modelId: selectedModel });
   }
 
   function handleMakeChange(e) {
     const makeId = e.target.value;
     setSelectedMake(makeId);
     setSelectedModel('');
-    setModels([]);
+    setModels([]); // Reset models when make changes
     if (makeId) {
-      fetchModels(makeId, selectedVehicleType);
+      fetchModels(makeId);
     }
     onFilterChange({ vehicleTypeId: selectedVehicleType, makeId, modelId: '' });
   }
@@ -125,7 +108,6 @@ export default function SearchFilter({ onFilterChange }) {
         value={selectedMake}
         onChange={handleMakeChange}
         className="p-2 border rounded"
-        disabled={!makes.length}
       >
         <option value="">Select Make</option>
         {makes.map((make) => (
